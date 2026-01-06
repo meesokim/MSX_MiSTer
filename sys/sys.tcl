@@ -201,7 +201,7 @@ set_location_assignment PIN_AA23 -to LED[7]
 # GPIO_1
 #============================================================
 set_location_assignment -name PIN_Y15 -to GPIO_1[0]
-set_location_assignment -name PIN_AG21 -to GPIO_1[1]
+set_location_assignment -name PIN_AC24 -to GPIO_1[1]
 set_location_assignment -name PIN_AA15 -to GPIO_1[2]
 set_location_assignment -name PIN_AD26 -to GPIO_1[3]
 set_location_assignment -name PIN_AG28 -to GPIO_1[4]
@@ -228,6 +228,14 @@ set_location_assignment -name PIN_AG20 -to GPIO_1[24]
 set_location_assignment -name PIN_AF21 -to GPIO_1[25]
 set_location_assignment -name PIN_AG19 -to GPIO_1[26]
 set_location_assignment -name PIN_AH19 -to GPIO_1[27]
+set_location_assignment -name PIN_AG18 -to GPIO_1[28]
+set_location_assignment -name PIN_AH18 -to GPIO_1[29]
+set_location_assignment -name PIN_AF18 -to GPIO_1[30]
+set_location_assignment -name PIN_AF20 -to GPIO_1[31]
+set_location_assignment -name PIN_AG15 -to GPIO_1[32]
+set_location_assignment -name PIN_AE20 -to GPIO_1[33]
+set_location_assignment -name PIN_AE19 -to GPIO_1[34]
+set_location_assignment -name PIN_AE17 -to GPIO_1[35]
 
 #============================================================
 # SW
