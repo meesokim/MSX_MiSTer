@@ -198,6 +198,38 @@ set_location_assignment PIN_Y16 -to LED[6]
 set_location_assignment PIN_AA23 -to LED[7]
 
 #============================================================
+# GPIO_0
+#============================================================
+set_location_assignment -name PIN_AH12 -to GPIO_0[0]
+set_location_assignment -name PIN_AH11 -to GPIO_0[1]
+set_location_assignment -name PIN_AH9  -to GPIO_0[2]
+set_location_assignment -name PIN_AD4  -to GPIO_0[3]
+set_location_assignment -name PIN_AC4  -to GPIO_0[4]
+set_location_assignment -name PIN_AH7  -to GPIO_0[5]
+set_location_assignment -name PIN_AG8  -to GPIO_0[6]
+set_location_assignment -name PIN_AH8  -to GPIO_0[7]
+set_location_assignment -name PIN_AG10 -to GPIO_0[8]
+set_location_assignment -name PIN_AG9  -to GPIO_0[9]
+set_location_assignment -name PIN_AG11 -to GPIO_0[10]
+set_location_assignment -name PIN_AG13 -to GPIO_0[11]
+set_location_assignment -name PIN_U9   -to GPIO_0[12]
+set_location_assignment -name PIN_V10  -to GPIO_0[13]
+set_location_assignment -name PIN_U13  -to GPIO_0[14]
+set_location_assignment -name PIN_AF13 -to GPIO_0[15]
+set_location_assignment -name PIN_U14  -to GPIO_0[16]
+set_location_assignment -name PIN_AF15 -to GPIO_0[17]
+set_location_assignment -name PIN_AG16 -to GPIO_0[18]
+set_location_assignment -name PIN_AE15 -to GPIO_0[19]
+set_location_assignment -name PIN_AF17 -to GPIO_0[20]
+set_location_assignment -name PIN_V15  -to GPIO_0[21]
+set_location_assignment -name PIN_V16  -to GPIO_0[22]
+set_location_assignment -name PIN_Y16  -to GPIO_0[23]
+set_location_assignment -name PIN_AA24 -to GPIO_0[24]
+set_location_assignment -name PIN_AF26 -to GPIO_0[25]
+set_location_assignment -name PIN_AA23 -to GPIO_0[26]
+set_location_assignment -name PIN_AE26 -to GPIO_0[27]
+
+#============================================================
 # GPIO_1
 #============================================================
 set_location_assignment -name PIN_Y15 -to GPIO_1[0]
