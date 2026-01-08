@@ -11,16 +11,18 @@ set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to ADC_CONVST
 set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to ADC_SCK
 set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to ADC_SDI
 set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to ADC_SDO
-set_location_assignment PIN_U9 -to ADC_CONVST
-set_location_assignment PIN_V10 -to ADC_SCK
-set_location_assignment PIN_AC4 -to ADC_SDI
-set_location_assignment PIN_AD4 -to ADC_SDO
+# ADC pins conflict with GPIO_0, so they are removed
+# set_location_assignment PIN_U9 -to ADC_CONVST  # Conflicts with GPIO_0[12]
+# set_location_assignment PIN_V10 -to ADC_SCK    # Conflicts with GPIO_0[13]
+# set_location_assignment PIN_AC4 -to ADC_SDI    # Conflicts with GPIO_0[4]
+# set_location_assignment PIN_AD4 -to ADC_SDO    # Conflicts with GPIO_0[3]
 
 #============================================================
 # I2C LEDS/BUTTONS
 #============================================================
-set_location_assignment PIN_U14 -to IO_SCL
-set_location_assignment PIN_AG9 -to IO_SDA
+# I2C pins conflict with GPIO_0, so they are removed
+# set_location_assignment PIN_U14 -to IO_SCL  # Conflicts with GPIO_0[16]
+# set_location_assignment PIN_AG9 -to IO_SDA  # Conflicts with GPIO_0[9]
 set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to IO_S*
 set_instance_assignment -name WEAK_PULL_UP_RESISTOR ON -to IO_S*
 set_instance_assignment -name CURRENT_STRENGTH_NEW "MAXIMUM CURRENT" -to IO_S*
@@ -28,13 +30,14 @@ set_instance_assignment -name CURRENT_STRENGTH_NEW "MAXIMUM CURRENT" -to IO_S*
 #============================================================
 # USER PORT
 #============================================================
-set_location_assignment PIN_AF17 -to USER_IO[6]
-set_location_assignment PIN_AF15 -to USER_IO[5]
-set_location_assignment PIN_AG16 -to USER_IO[4]
-set_location_assignment PIN_AH11 -to USER_IO[3]
-set_location_assignment PIN_AH12 -to USER_IO[2]
-set_location_assignment PIN_AH9 -to USER_IO[1]
-set_location_assignment PIN_AG11 -to USER_IO[0]
+# USER_IO pins conflict with GPIO_0, so they are removed
+# set_location_assignment PIN_AF17 -to USER_IO[6]  # Conflicts with GPIO_0[20]
+# set_location_assignment PIN_AF15 -to USER_IO[5]  # Conflicts with GPIO_0[17]
+# set_location_assignment PIN_AG16 -to USER_IO[4]  # Conflicts with GPIO_0[18]
+# set_location_assignment PIN_AH11 -to USER_IO[3]  # Conflicts with GPIO_0[1]
+# set_location_assignment PIN_AH12 -to USER_IO[2]  # Conflicts with GPIO_0[0]
+# set_location_assignment PIN_AH9 -to USER_IO[1]   # Conflicts with GPIO_0[2]
+# set_location_assignment PIN_AG11 -to USER_IO[0]  # Conflicts with GPIO_0[10]
 set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to USER_IO[*]
 set_instance_assignment -name WEAK_PULL_UP_RESISTOR ON -to USER_IO[*]
 set_instance_assignment -name CURRENT_STRENGTH_NEW "MAXIMUM CURRENT" -to USER_IO[*]
@@ -42,10 +45,11 @@ set_instance_assignment -name CURRENT_STRENGTH_NEW "MAXIMUM CURRENT" -to USER_IO
 #============================================================
 # SDIO_CD or SPDIF_OUT
 #============================================================
-set_location_assignment PIN_AH7 -to SDCD_SPDIF
-set_instance_assignment -name CURRENT_STRENGTH_NEW "MAXIMUM CURRENT" -to SDCD_SPDIF
-set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to SDCD_SPDIF
-set_instance_assignment -name WEAK_PULL_UP_RESISTOR ON -to SDCD_SPDIF
+# SDCD_SPDIF conflicts with GPIO_0, so it's removed
+# set_location_assignment PIN_AH7 -to SDCD_SPDIF  # Conflicts with GPIO_0[5]
+# set_instance_assignment -name CURRENT_STRENGTH_NEW "MAXIMUM CURRENT" -to SDCD_SPDIF
+# set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to SDCD_SPDIF
+# set_instance_assignment -name WEAK_PULL_UP_RESISTOR ON -to SDCD_SPDIF
 
 #============================================================
 # SDRAM
@@ -81,15 +85,15 @@ set_location_assignment PIN_AG14 -to SDRAM_DQ[12]
 set_location_assignment PIN_AD5 -to SDRAM_DQ[13]
 set_location_assignment PIN_AF4 -to SDRAM_DQ[14]
 set_location_assignment PIN_AH3 -to SDRAM_DQ[15]
-set_location_assignment PIN_AG13 -to SDRAM_DQML
-set_location_assignment PIN_AF13 -to SDRAM_DQMH
+# SDRAM pins that conflict with GPIO_0 are removed
+# set_location_assignment PIN_AG13 -to SDRAM_DQML  # Conflicts with GPIO_0[11]
+# set_location_assignment PIN_AF13 -to SDRAM_DQMH  # Conflicts with GPIO_0[15]
+# set_location_assignment PIN_AG10 -to SDRAM_CKE   # Conflicts with GPIO_0[8]
 set_location_assignment PIN_AD20 -to SDRAM_CLK
-set_location_assignment PIN_AG10 -to SDRAM_CKE
 set_location_assignment PIN_AA19 -to SDRAM_nWE
 set_location_assignment PIN_AA18 -to SDRAM_nCAS
 set_location_assignment PIN_Y18 -to SDRAM_nCS
 set_location_assignment PIN_W14 -to SDRAM_nRAS
-
 set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to SDRAM_*
 set_instance_assignment -name CURRENT_STRENGTH_NEW "MAXIMUM CURRENT" -to SDRAM_*
 set_instance_assignment -name FAST_OUTPUT_REGISTER ON -to SDRAM_*
@@ -100,14 +104,14 @@ set_instance_assignment -name ALLOW_SYNCH_CTRL_USAGE OFF -to *|SDRAM_*
 #============================================================
 # SPI SD
 #============================================================
-set_location_assignment PIN_AE15 -to SD_SPI_CS
-set_location_assignment PIN_AH8  -to SD_SPI_MISO
-set_location_assignment PIN_AG8  -to SD_SPI_CLK
-set_location_assignment PIN_U13  -to SD_SPI_MOSI
-set_instance_assignment -name CURRENT_STRENGTH_NEW "MAXIMUM CURRENT" -to SD_SPI*
-set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to SD_SPI*
-set_instance_assignment -name WEAK_PULL_UP_RESISTOR ON -to SD_SPI*
-
+# SD_SPI pins conflict with GPIO_0, so they are removed
+# set_location_assignment PIN_AE15 -to SD_SPI_CS   # Conflicts with GPIO_0[19]
+# set_location_assignment PIN_AH8  -to SD_SPI_MISO # Conflicts with GPIO_0[7]
+# set_location_assignment PIN_AG8  -to SD_SPI_CLK  # Conflicts with GPIO_0[6]
+# set_location_assignment PIN_U13  -to SD_SPI_MOSI # Conflicts with GPIO_0[14]
+# set_instance_assignment -name CURRENT_STRENGTH_NEW "MAXIMUM CURRENT" -to SD_SPI*
+# set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to SD_SPI*
+# set_instance_assignment -name WEAK_PULL_UP_RESISTOR ON -to SD_SPI*
 
 #============================================================
 # CLOCK
@@ -189,16 +193,17 @@ set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to LED[5]
 set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to LED[6]
 set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to LED[7]
 set_location_assignment PIN_W15 -to LED[0]
-set_location_assignment PIN_AA24 -to LED[1]
-set_location_assignment PIN_V16 -to LED[2]
-set_location_assignment PIN_V15 -to LED[3]
-set_location_assignment PIN_AF26 -to LED[4]
-set_location_assignment PIN_AE26 -to LED[5]
-set_location_assignment PIN_Y16 -to LED[6]
-set_location_assignment PIN_AA23 -to LED[7]
+# LED pins that conflict with GPIO_0 are removed
+# set_location_assignment PIN_AA24 -to LED[1]  # Conflicts with GPIO_0[24]
+# set_location_assignment PIN_V16 -to LED[2]   # Conflicts with GPIO_0[22]
+# set_location_assignment PIN_V15 -to LED[3]   # Conflicts with GPIO_0[21]
+# set_location_assignment PIN_AF26 -to LED[4]  # Conflicts with GPIO_0[25]
+# set_location_assignment PIN_AE26 -to LED[5]  # Conflicts with GPIO_0[27]
+# set_location_assignment PIN_Y16 -to LED[6]   # Conflicts with GPIO_0[23]
+# set_location_assignment PIN_AA23 -to LED[7]  # Conflicts with GPIO_0[26]
 
 #============================================================
-# GPIO_0
+# GPIO_0 - KEEP ALL GPIO_0 ASSIGNMENTS
 #============================================================
 set_location_assignment -name PIN_AH12 -to GPIO_0[0]
 set_location_assignment -name PIN_AH11 -to GPIO_0[1]
@@ -246,13 +251,13 @@ set_location_assignment -name PIN_AG25 -to GPIO_1[10]
 set_location_assignment -name PIN_AH26 -to GPIO_1[11]
 set_location_assignment -name PIN_AH24 -to GPIO_1[12]
 set_location_assignment -name PIN_AF25 -to GPIO_1[13]
-set_location_assignment -name PIN_AG23 -to GPIO_1[14]
+set_location_assignment -name PIN_AG23 -to GPIO_1[14]  
 set_location_assignment -name PIN_AF23 -to GPIO_1[15]
 set_location_assignment -name PIN_AG24 -to GPIO_1[16]
 set_location_assignment -name PIN_AH22 -to GPIO_1[17]
 set_location_assignment -name PIN_AH21 -to GPIO_1[18]
 set_location_assignment -name PIN_AG21 -to GPIO_1[19]
-set_location_assignment -name PIN_AG23 -to GPIO_1[20]
+set_location_assignment -name PIN_AH23 -to GPIO_1[20]
 set_location_assignment -name PIN_AA20 -to GPIO_1[21]
 set_location_assignment -name PIN_AF22 -to GPIO_1[22]
 set_location_assignment -name PIN_AE22 -to GPIO_1[23]
@@ -286,7 +291,5 @@ set_instance_assignment -name HPS_LOCATION HPSINTERFACEPERIPHERALUART_X52_Y67_N1
 set_instance_assignment -name HPS_LOCATION HPSINTERFACEPERIPHERALI2C_X52_Y60_N111 -entity sys_top -to hdmi_i2c
 
 set_global_assignment -name PRE_FLOW_SCRIPT_FILE "quartus_sh:sys/build_id.tcl"
-
 set_global_assignment -name CDF_FILE jtag.cdf
 set_global_assignment -name QIP_FILE sys/sys.qip
-
