@@ -34,10 +34,7 @@ set_instance_assignment -name CURRENT_STRENGTH_NEW "MAXIMUM CURRENT" -to IO_S*
 # set_location_assignment PIN_AF17 -to USER_IO[6]  # Conflicts with GPIO_0[20]
 # set_location_assignment PIN_AF15 -to USER_IO[5]  # Conflicts with GPIO_0[17]
 # set_location_assignment PIN_AG16 -to USER_IO[4]  # Conflicts with GPIO_0[18]
-# set_location_assignment PIN_AH11 -to USER_IO[3]  # Conflicts with GPIO_0[1]
-# set_location_assignment PIN_AH12 -to USER_IO[2]  # Conflicts with GPIO_0[0]
-# set_location_assignment PIN_AH9 -to USER_IO[1]   # Conflicts with GPIO_0[2]
-# set_location_assignment PIN_AG11 -to USER_IO[0]  # Conflicts with GPIO_0[10]
+
 set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to USER_IO[*]
 set_instance_assignment -name WEAK_PULL_UP_RESISTOR ON -to USER_IO[*]
 set_instance_assignment -name CURRENT_STRENGTH_NEW "MAXIMUM CURRENT" -to USER_IO[*]
