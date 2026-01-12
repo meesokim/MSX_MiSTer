@@ -31,10 +31,13 @@ set_instance_assignment -name CURRENT_STRENGTH_NEW "MAXIMUM CURRENT" -to IO_S*
 # USER PORT
 #============================================================
 # USER_IO pins conflict with GPIO_0, so they are removed
-# set_location_assignment PIN_AF17 -to USER_IO[6]  # Conflicts with GPIO_0[20]
-# set_location_assignment PIN_AF15 -to USER_IO[5]  # Conflicts with GPIO_0[17]
-# set_location_assignment PIN_AG16 -to USER_IO[4]  # Conflicts with GPIO_0[18]
-
+set_location_assignment PIN_AF17 -to USER_IO[6]  
+set_location_assignment PIN_AF15 -to USER_IO[5]  
+set_location_assignment PIN_AG16 -to USER_IO[4]  
+set_location_assignment PIN_AH11 -to USER_IO[3]  
+set_location_assignment PIN_AH12 -to USER_IO[2]  
+set_location_assignment PIN_AH9 -to USER_IO[1]   
+set_location_assignment PIN_AG11 -to USER_IO[0]  
 set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to USER_IO[*]
 set_instance_assignment -name WEAK_PULL_UP_RESISTOR ON -to USER_IO[*]
 set_instance_assignment -name CURRENT_STRENGTH_NEW "MAXIMUM CURRENT" -to USER_IO[*]
@@ -42,11 +45,10 @@ set_instance_assignment -name CURRENT_STRENGTH_NEW "MAXIMUM CURRENT" -to USER_IO
 #============================================================
 # SDIO_CD or SPDIF_OUT
 #============================================================
-# SDCD_SPDIF conflicts with GPIO_0, so it's removed
-# set_location_assignment PIN_AH7 -to SDCD_SPDIF  # Conflicts with GPIO_0[5]
-# set_instance_assignment -name CURRENT_STRENGTH_NEW "MAXIMUM CURRENT" -to SDCD_SPDIF
-# set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to SDCD_SPDIF
-# set_instance_assignment -name WEAK_PULL_UP_RESISTOR ON -to SDCD_SPDIF
+set_location_assignment PIN_AH7 -to SDCD_SPDIF  
+set_instance_assignment -name CURRENT_STRENGTH_NEW "MAXIMUM CURRENT" -to SDCD_SPDIF
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to SDCD_SPDIF
+set_instance_assignment -name WEAK_PULL_UP_RESISTOR ON -to SDCD_SPDIF
 
 #============================================================
 # SDRAM
@@ -82,10 +84,9 @@ set_location_assignment PIN_AG14 -to SDRAM_DQ[12]
 set_location_assignment PIN_AD5 -to SDRAM_DQ[13]
 set_location_assignment PIN_AF4 -to SDRAM_DQ[14]
 set_location_assignment PIN_AH3 -to SDRAM_DQ[15]
-# SDRAM pins that conflict with GPIO_0 are removed
-# set_location_assignment PIN_AG13 -to SDRAM_DQML  # Conflicts with GPIO_0[11]
-# set_location_assignment PIN_AF13 -to SDRAM_DQMH  # Conflicts with GPIO_0[15]
-# set_location_assignment PIN_AG10 -to SDRAM_CKE   # Conflicts with GPIO_0[8]
+set_location_assignment PIN_AG13 -to SDRAM_DQML  
+set_location_assignment PIN_AF13 -to SDRAM_DQMH  
+set_location_assignment PIN_AG10 -to SDRAM_CKE   
 set_location_assignment PIN_AD20 -to SDRAM_CLK
 set_location_assignment PIN_AA19 -to SDRAM_nWE
 set_location_assignment PIN_AA18 -to SDRAM_nCAS
@@ -101,14 +102,13 @@ set_instance_assignment -name ALLOW_SYNCH_CTRL_USAGE OFF -to *|SDRAM_*
 #============================================================
 # SPI SD
 #============================================================
-# SD_SPI pins conflict with GPIO_0, so they are removed
-# set_location_assignment PIN_AE15 -to SD_SPI_CS   # Conflicts with GPIO_0[19]
-# set_location_assignment PIN_AH8  -to SD_SPI_MISO # Conflicts with GPIO_0[7]
-# set_location_assignment PIN_AG8  -to SD_SPI_CLK  # Conflicts with GPIO_0[6]
-# set_location_assignment PIN_U13  -to SD_SPI_MOSI # Conflicts with GPIO_0[14]
-# set_instance_assignment -name CURRENT_STRENGTH_NEW "MAXIMUM CURRENT" -to SD_SPI*
-# set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to SD_SPI*
-# set_instance_assignment -name WEAK_PULL_UP_RESISTOR ON -to SD_SPI*
+set_location_assignment PIN_AE15 -to SD_SPI_CS   
+set_location_assignment PIN_AH8  -to SD_SPI_MISO 
+set_location_assignment PIN_AG8  -to SD_SPI_CLK  
+set_location_assignment PIN_U13  -to SD_SPI_MOSI 
+set_instance_assignment -name CURRENT_STRENGTH_NEW "MAXIMUM CURRENT" -to SD_SPI*
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to SD_SPI*
+set_instance_assignment -name WEAK_PULL_UP_RESISTOR ON -to SD_SPI*
 
 #============================================================
 # CLOCK
@@ -190,86 +190,57 @@ set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to LED[5]
 set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to LED[6]
 set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to LED[7]
 set_location_assignment PIN_W15 -to LED[0]
-# LED pins that conflict with GPIO_0 are removed
-# set_location_assignment PIN_AA24 -to LED[1]  # Conflicts with GPIO_0[24]
-# set_location_assignment PIN_V16 -to LED[2]   # Conflicts with GPIO_0[22]
-# set_location_assignment PIN_V15 -to LED[3]   # Conflicts with GPIO_0[21]
-# set_location_assignment PIN_AF26 -to LED[4]  # Conflicts with GPIO_0[25]
-# set_location_assignment PIN_AE26 -to LED[5]  # Conflicts with GPIO_0[27]
-# set_location_assignment PIN_Y16 -to LED[6]   # Conflicts with GPIO_0[23]
-# set_location_assignment PIN_AA23 -to LED[7]  # Conflicts with GPIO_0[26]
+set_location_assignment PIN_AA24 -to LED[1]  
+set_location_assignment PIN_V16 -to LED[2]   
+set_location_assignment PIN_V15 -to LED[3]   
+set_location_assignment PIN_AF26 -to LED[4]  
+set_location_assignment PIN_AE26 -to LED[5]  
+set_location_assignment PIN_Y16 -to LED[6]   
+set_location_assignment PIN_AA23 -to LED[7]  
 
 #============================================================
-# GPIO_0 - KEEP ALL GPIO_0 ASSIGNMENTS
+# GPIO assignments based on ZEMMIX_BUS setting
 #============================================================
-set_location_assignment -name PIN_AH12 -to GPIO_0[0]
-set_location_assignment -name PIN_AH11 -to GPIO_0[1]
-set_location_assignment -name PIN_AH9  -to GPIO_0[2]
-set_location_assignment -name PIN_AD4  -to GPIO_0[3]
-set_location_assignment -name PIN_AC4  -to GPIO_0[4]
-set_location_assignment -name PIN_AH7  -to GPIO_0[5]
-set_location_assignment -name PIN_AG8  -to GPIO_0[6]
-set_location_assignment -name PIN_AH8  -to GPIO_0[7]
-set_location_assignment -name PIN_AG10 -to GPIO_0[8]
-set_location_assignment -name PIN_AG9  -to GPIO_0[9]
-set_location_assignment -name PIN_AG11 -to GPIO_0[10]
-set_location_assignment -name PIN_AG13 -to GPIO_0[11]
-set_location_assignment -name PIN_U9   -to GPIO_0[12]
-set_location_assignment -name PIN_V10  -to GPIO_0[13]
-set_location_assignment -name PIN_U13  -to GPIO_0[14]
-set_location_assignment -name PIN_AF13 -to GPIO_0[15]
-set_location_assignment -name PIN_U14  -to GPIO_0[16]
-set_location_assignment -name PIN_AF15 -to GPIO_0[17]
-set_location_assignment -name PIN_AG16 -to GPIO_0[18]
-set_location_assignment -name PIN_AE15 -to GPIO_0[19]
-set_location_assignment -name PIN_AF17 -to GPIO_0[20]
-set_location_assignment -name PIN_V15  -to GPIO_0[21]
-set_location_assignment -name PIN_V16  -to GPIO_0[22]
-set_location_assignment -name PIN_Y16  -to GPIO_0[23]
-set_location_assignment -name PIN_AA24 -to GPIO_0[24]
-set_location_assignment -name PIN_AF26 -to GPIO_0[25]
-set_location_assignment -name PIN_AA23 -to GPIO_0[26]
-set_location_assignment -name PIN_AE26 -to GPIO_0[27]
 
 #============================================================
-# GPIO_1
+# GPIO_1 - USE GPIO_1 ASSIGNMENTS (ZEMMIX_BUS = 1)
 #============================================================
-set_location_assignment -name PIN_Y15 -to GPIO_1[0]
-set_location_assignment -name PIN_AC24 -to GPIO_1[1]
-set_location_assignment -name PIN_AA15 -to GPIO_1[2]
-set_location_assignment -name PIN_AD26 -to GPIO_1[3]
-set_location_assignment -name PIN_AG28 -to GPIO_1[4]
-set_location_assignment -name PIN_AF28 -to GPIO_1[5]
-set_location_assignment -name PIN_AE25 -to GPIO_1[6]
-set_location_assignment -name PIN_AF27 -to GPIO_1[7]
-set_location_assignment -name PIN_AG26 -to GPIO_1[8]
-set_location_assignment -name PIN_AH27 -to GPIO_1[9]
-set_location_assignment -name PIN_AG25 -to GPIO_1[10]
-set_location_assignment -name PIN_AH26 -to GPIO_1[11]
-set_location_assignment -name PIN_AH24 -to GPIO_1[12]
-set_location_assignment -name PIN_AF25 -to GPIO_1[13]
-set_location_assignment -name PIN_AG23 -to GPIO_1[14]  
-set_location_assignment -name PIN_AF23 -to GPIO_1[15]
-set_location_assignment -name PIN_AG24 -to GPIO_1[16]
-set_location_assignment -name PIN_AH22 -to GPIO_1[17]
-set_location_assignment -name PIN_AH21 -to GPIO_1[18]
-set_location_assignment -name PIN_AG21 -to GPIO_1[19]
-set_location_assignment -name PIN_AH23 -to GPIO_1[20]
-set_location_assignment -name PIN_AA20 -to GPIO_1[21]
-set_location_assignment -name PIN_AF22 -to GPIO_1[22]
-set_location_assignment -name PIN_AE22 -to GPIO_1[23]
-set_location_assignment -name PIN_AG20 -to GPIO_1[24]
-set_location_assignment -name PIN_AF21 -to GPIO_1[25]
-set_location_assignment -name PIN_AG19 -to GPIO_1[26]
-set_location_assignment -name PIN_AH19 -to GPIO_1[27]
-set_location_assignment -name PIN_AG18 -to GPIO_1[28]
-set_location_assignment -name PIN_AH18 -to GPIO_1[29]
-set_location_assignment -name PIN_AF18 -to GPIO_1[30]
-set_location_assignment -name PIN_AF20 -to GPIO_1[31]
-set_location_assignment -name PIN_AG15 -to GPIO_1[32]
-set_location_assignment -name PIN_AE20 -to GPIO_1[33]
-set_location_assignment -name PIN_AE19 -to GPIO_1[34]
-set_location_assignment -name PIN_AE17 -to GPIO_1[35]
+set_location_assignment PIN_Y15 -to GPIO_1[0]
+set_location_assignment PIN_AC24 -to GPIO_1[1]
+set_location_assignment PIN_AA15 -to GPIO_1[2]
+set_location_assignment PIN_AD26 -to pSltMux[0]
+set_location_assignment PIN_AG28 -to pSltMux[1]
+set_location_assignment PIN_AF28 -to pSltMux[2]
+set_location_assignment PIN_AE25 -to pSltMux[3]
+set_location_assignment PIN_AF27 -to pSltMux[4]
+set_location_assignment PIN_AG26 -to pSltMux[5]
+set_location_assignment PIN_AH27 -to pSltMux[6]
+set_location_assignment PIN_AG25 -to GPIO_1[10]
+set_location_assignment PIN_AH26 -to pSltMux[7]
+set_location_assignment PIN_AH24 -to pSltMode[0]
+set_location_assignment PIN_AF25 -to pSltMode[1]
+set_location_assignment PIN_AG23 -to pSltMerq_n  
+set_location_assignment PIN_AF23 -to pSltIorq_n
+set_location_assignment PIN_AG24 -to pSltRd_n
+set_location_assignment PIN_AH22 -to GPIO_1[17]
+set_location_assignment PIN_AH21 -to GPIO_1[18]
+set_location_assignment PIN_AG21 -to GPIO_1[19]
+set_location_assignment PIN_AH23 -to pSltWr_n
+set_location_assignment PIN_AA20 -to pSltSltsl_n
+set_location_assignment PIN_AF22 -to pSltSlts2_n
+set_location_assignment PIN_AE22 -to pSltWait_n
+set_location_assignment PIN_AG20 -to pSltInt_n
+set_location_assignment PIN_AF21 -to pSltRst_n
+set_location_assignment PIN_AG19 -to GPIO_1[26]
+set_location_assignment PIN_AH19 -to GPIO_1[27]
+set_location_assignment PIN_AG18 -to GPIO_1[28]
+set_location_assignment PIN_AH18 -to GPIO_1[29]
+set_location_assignment PIN_AF18 -to GPIO_1[30]
+set_location_assignment PIN_AF20 -to GPIO_1[31]
+set_location_assignment PIN_AG15 -to GPIO_1[32]
+set_location_assignment PIN_AE20 -to GPIO_1[33]
+set_location_assignment PIN_AE19 -to GPIO_1[34]
+set_location_assignment PIN_AE17 -to GPIO_1[35]
 
 #============================================================
 # SW

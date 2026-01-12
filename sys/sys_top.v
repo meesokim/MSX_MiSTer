@@ -1658,7 +1658,6 @@ assign user_in[4] = SW[1] | USER_IO[4];
 assign user_in[5] = SW[1] | USER_IO[5];
 assign user_in[6] =         USER_IO[6];
 
-
 ///////////////////  User module connection ////////////////////////////
 
 wire        clk_sys;
