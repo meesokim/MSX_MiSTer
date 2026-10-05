@@ -21,159 +21,7 @@
 
 module emu
 (
-	//Master input clock
-	input         CLK_50M,
-
-	//Async reset from top-level module.
-	//Can be used as initial reset.
-	input         RESET,
-
-	//Must be passed to hps_io module
-	inout  [48:0] HPS_BUS,
-
-	//Base video clock. Usually equals to CLK_SYS.
-	output        CLK_VIDEO,
-
-	//Multiple resolutions are supported using different CE_PIXEL rates.
-	//Must be based on CLK_VIDEO
-	output        CE_PIXEL,
-
-	//Video aspect ratio for HDMI. Most retro systems have ratio 4:3.
-	//if VIDEO_ARX[12] or VIDEO_ARY[12] is set then [11:0] contains scaled size instead of aspect ratio.
-	output [12:0] VIDEO_ARX,
-	output [12:0] VIDEO_ARY,
-
-	output  [7:0] VGA_R,
-	output  [7:0] VGA_G,
-	output  [7:0] VGA_B,
-	output        VGA_HS,
-	output        VGA_VS,
-	output        VGA_DE,    // = ~(VBlank | HBlank)
-	output        VGA_F1,
-	output [1:0]  VGA_SL,
-	output        VGA_SCALER, // Force VGA scaler
-	output        VGA_DISABLE, // analog out is off
-
-	input  [11:0] HDMI_WIDTH,
-	input  [11:0] HDMI_HEIGHT,
-	output        HDMI_FREEZE,
-	output        HDMI_BLACKOUT,
-	output        HDMI_BOB_DEINT,
-
-`ifdef MISTER_FB
-	// Use framebuffer in DDRAM
-	// FB_FORMAT:
-	//    [2:0] : 011=8bpp(palette) 100=16bpp 101=24bpp 110=32bpp
-	//    [3]   : 0=16bits 565 1=16bits 1555
-	//    [4]   : 0=RGB  1=BGR (for 16/24/32 modes)
-	//
-	// FB_STRIDE either 0 (rounded to 256 bytes) or multiple of pixel size (in bytes)
-	output        FB_EN,
-	output  [4:0] FB_FORMAT,
-	output [11:0] FB_WIDTH,
-	output [11:0] FB_HEIGHT,
-	output [31:0] FB_BASE,
-	output [13:0] FB_STRIDE,
-	input         FB_VBL,
-	input         FB_LL,
-	output        FB_FORCE_BLANK,
-
-`ifdef MISTER_FB_PALETTE
-	// Palette control for 8bit modes.
-	// Ignored for other video modes.
-	output        FB_PAL_CLK,
-	output  [7:0] FB_PAL_ADDR,
-	output [23:0] FB_PAL_DOUT,
-	input  [23:0] FB_PAL_DIN,
-	output        FB_PAL_WR,
-`endif
-`endif
-
-	output        LED_USER,  // 1 - ON, 0 - OFF.
-
-	// b[1]: 0 - LED status is system status OR'd with b[0]
-	//       1 - LED status is controled solely by b[0]
-	// hint: supply 2'b00 to let the system control the LED.
-	output  [1:0] LED_POWER,
-	output  [1:0] LED_DISK,
-
-	// I/O board button press simulation (active high)
-	// b[1]: user button
-	// b[0]: osd button
-	output  [1:0] BUTTONS,
-
-	input         CLK_AUDIO, // 24.576 MHz
-	output [15:0] AUDIO_L,
-	output [15:0] AUDIO_R,
-	output        AUDIO_S,   // 1 - signed audio samples, 0 - unsigned
-	output  [1:0] AUDIO_MIX, // 0 - no mix, 1 - 25%, 2 - 50%, 3 - 100% (mono)
-
-	//ADC
-	inout   [3:0] ADC_BUS,
-
-	//SD-SPI
-	output        SD_SCK,
-	output        SD_MOSI,
-	input         SD_MISO,
-	output        SD_CS,
-	input         SD_CD,
-
-	//High latency DDR3 RAM interface
-	//Use for non-critical time purposes
-	output        DDRAM_CLK,
-	input         DDRAM_BUSY,
-	output  [7:0] DDRAM_BURSTCNT,
-	output [28:0] DDRAM_ADDR,
-	input  [63:0] DDRAM_DOUT,
-	input         DDRAM_DOUT_READY,
-	output        DDRAM_RD,
-	output [63:0] DDRAM_DIN,
-	output  [7:0] DDRAM_BE,
-	output        DDRAM_WE,
-
-	//SDRAM interface with lower latency
-	output        SDRAM_CLK,
-	output        SDRAM_CKE,
-	output [12:0] SDRAM_A,
-	output  [1:0] SDRAM_BA,
-	inout  [15:0] SDRAM_DQ,
-	output        SDRAM_DQML,
-	output        SDRAM_DQMH,
-	output        SDRAM_nCS,
-	output        SDRAM_nCAS,
-	output        SDRAM_nRAS,
-	output        SDRAM_nWE,
-
-`ifdef MISTER_DUAL_SDRAM
-	//Secondary SDRAM
-	//Set all output SDRAM_* signals to Z ASAP if SDRAM2_EN is 0
-	input         SDRAM2_EN,
-	output        SDRAM2_CLK,
-	output [12:0] SDRAM2_A,
-	output  [1:0] SDRAM2_BA,
-	inout  [15:0] SDRAM2_DQ,
-	output        SDRAM2_nCS,
-	output        SDRAM2_nCAS,
-	output        SDRAM2_nRAS,
-	output        SDRAM2_nWE,
-`endif
-
-	input         UART_CTS,
-	output        UART_RTS,
-	input         UART_RXD,
-	output        UART_TXD,
-	output        UART_DTR,
-	input         UART_DSR,
-
-	// Open-drain User port.
-	// 0 - D+/RX
-	// 1 - D-/TX
-	// 2..6 - USR2..USR6
-	// Set USER_OUT to 1 to read from USER_IN.
-	input   [6:0] USER_IN,
-	output  [6:0] USER_OUT,
-
-	input         OSD_STATUS
+	`include "sys/emu_ports.vh"
 );
 
 //assign ADC_BUS  = 'Z;  - We need the ADC for the EAR
@@ -194,6 +42,7 @@ assign HDMI_BOB_DEINT = 0;
 `include "build_id.v"
 localparam CONF_STR = {
 	"MSX;;",
+	"F1,ROM,Load Slot 1 ROM;",
 	"S,VHD;",
 	"OE,Reset after Mount,No,Yes;",
 	"-;",
@@ -469,26 +318,34 @@ emsx_top emsx
 	.pZmxWait_n(zmx_wait_n),
 	.pZmxSltCs(zmx_slt_cs),
 	.pZmxSltMerq_n(zmx_slt_merq_n),
+	.pZmxSltRfsh_n(zmx_slt_rfsh_n),
 	.pZmxSltIorq_n(zmx_slt_iorq_n),
 	.pZmxSltRd_n(zmx_slt_rd_n),
 	.pZmxSltWr_n(zmx_slt_wr_n),
+	.pZmxSltM1_n(zmx_slt_m1_n),
+	.pZmxSltBusDir(zmx_slt_busdir),
 	.pZmxSltAdr(zmx_slt_addr),
 	.pZmxSltWDat(zmx_slt_wdata),
 	.pZmxSltRDat(zmx_slt_rdata),
-	.pZmxSltRDatEn(zmx_slt_rdata_en)
+	.pZmxSltRDatEn(zmx_slt_rdata_en),
+	.pZmxIoRDat(zmx_slt_rdata_io)
 );
 
 // ZMX Bridge
 wire        zmx_wait_n;
 wire        zmx_slt_cs;
 wire        zmx_slt_merq_n;
+wire        zmx_slt_rfsh_n;
 wire        zmx_slt_iorq_n;
 wire        zmx_slt_rd_n;
 wire        zmx_slt_wr_n;
+wire        zmx_slt_m1_n;
+wire        zmx_slt_busdir;
 wire [15:0] zmx_slt_addr;
 wire  [7:0] zmx_slt_wdata;
 wire  [7:0] zmx_slt_rdata;
 wire        zmx_slt_rdata_en;
+wire        zmx_slt_rdata_io;
 
 zmx_bridge zmx_bridge
 (
@@ -499,13 +356,17 @@ zmx_bridge zmx_bridge
 	.slot_sel(status[19]),
 	.slt_cs(zmx_slt_cs),
 	.slt_merq_n(zmx_slt_merq_n),
+	.slt_rfsh_n(zmx_slt_rfsh_n),
 	.slt_iorq_n(zmx_slt_iorq_n),
 	.slt_rd_n(zmx_slt_rd_n),
 	.slt_wr_n(zmx_slt_wr_n),
+	.slt_m1_n(zmx_slt_m1_n),
+	.slt_busdir(zmx_slt_busdir),
 	.slt_addr(zmx_slt_addr),
 	.slt_wdata(zmx_slt_wdata),
 	.slt_rdata(zmx_slt_rdata),
 	.slt_rdata_en(zmx_slt_rdata_en),
+	.slt_rdata_io(zmx_slt_rdata_io),
 	.cpu_wait_n(zmx_wait_n)
 );
 

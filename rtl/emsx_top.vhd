@@ -48,34 +48,6 @@ entity emsx_top is
         pReset          : in    std_logic;
         pColdReset      : in    std_logic;
 
-        -- MSX cartridge slot ports
-        pSltClk         : in    std_logic;                                      -- pCpuClk returns here, for Z80, etc.
-        pSltRst_n       : inout    std_logic;                                      -- RESET_n  (with external pull-up)
-        pSltSltsl_n     : inout std_logic;
-        pSltSlts2_n     : inout std_logic;
-        pSltIorq_n      : inout std_logic;
-        pSltRd_n        : inout std_logic;
-        pSltWr_n        : inout std_logic;
-        -- pSltAdr         : inout std_logic_vector( 15 downto 0 );
-        -- pSltDat         : inout std_logic_vector(  7 downto 0 );
-        -- pSltBdir_n      : out   std_logic;                                      -- Bus direction (not used in master mode)
-        pSltMode        : out   std_logic_vector( 1 downto 0 );
-        pSltMux         : inout std_logic_vector(  7 downto 0 );
-
-        pSltCs1_n       : inout std_logic;
-        pSltCs2_n       : inout std_logic;
-        pSltCs12_n      : inout std_logic;
-        pSltRfsh_n      : inout std_logic;
-        pSltWait_n      : inout std_logic;                                      -- WAIT_n   (with external pull-up)
-        pSltInt_n       : inout std_logic;                                      -- INT_n    (with external pull-up)
-        pSltM1_n        : inout std_logic;
-        pSltMerq_n      : inout std_logic;
-
-        pSltRsv5        : inout std_logic;                                      -- Reserved
-        pSltRsv16       : inout std_logic;                                      -- Reserved (with external pull-up)
-        pSltSw1         : inout std_logic;                                      -- Reserved
-        pSltSw2         : inout std_logic;                                      -- Reserved
-
         -- SD-RAM ports
         pMemCke         : out   std_logic;                          -- SD-RAM Clock enable
         pMemCs_n        : out   std_logic;                          -- SD-RAM Chip select
@@ -131,7 +103,24 @@ entity emsx_top is
         pAudioPSG       : out   std_logic_vector(  9 downto 0);
         pAudioOPLL      : out   std_logic_vector( 13 downto 0);
         pAudioPCM       : out   std_logic_vector( 15 downto 0);
-        pAudioTRPCM     : out   std_logic_vector(  7 downto 0)
+        pAudioTRPCM     : out   std_logic_vector(  7 downto 0);
+
+        -- ZMX Slot Extension ports
+        pZmxSlotSel     : in    std_logic := '1'; -- '0': Slot 1, '1': Slot 2
+        pZmxWait_n      : in    std_logic := '1';
+        pZmxSltCs       : out   std_logic;
+        pZmxSltMerq_n   : out   std_logic;
+        pZmxSltRfsh_n   : out   std_logic;
+        pZmxSltIorq_n   : out   std_logic;
+        pZmxSltRd_n     : out   std_logic;
+        pZmxSltWr_n     : out   std_logic;
+        pZmxSltM1_n     : out   std_logic;
+        pZmxSltBusDir   : out   std_logic;
+        pZmxSltAdr      : out   std_logic_vector( 15 downto 0 );
+        pZmxSltWDat     : out   std_logic_vector(  7 downto 0 );
+        pZmxSltRDat     : in    std_logic_vector(  7 downto 0 ) := (others => '1');
+        pZmxSltRDatEn   : in    std_logic := '0';
+        pZmxIoRDat      : in    std_logic := '0'
     );
 end emsx_top;
 
@@ -243,14 +232,6 @@ architecture RTL of emsx_top is
     signal  CpuRfsh_n       : std_logic;
     signal  cpu_di          : std_logic_vector(  7 downto 0 );
     signal  cpu_do          : std_logic_vector(  7 downto 0 );
-
-    -- pSltMux multiplexing signals
-    signal  mux_state       : std_logic_vector( 1 downto 0 ) := "00";
-    signal  mux_prev_slts1  : std_logic := '1';
-    signal  mux_prev_slts2  : std_logic := '1';
-    signal  mux_prev_iorq   : std_logic := '1';
-    signal  mux_adr_latch   : std_logic_vector( 15 downto 0 );
-    signal  mux_dat_latch   : std_logic_vector(  7 downto 0 );    
 
     -- Internal bus signals (common)
     signal  req             : std_logic;
@@ -458,19 +439,16 @@ architecture RTL of emsx_top is
     signal portF4_bit7      : std_logic;                                    -- 1=hard reset, 0=soft reset
 
         -- MSX cartridge slot ports
-    -- signal  pSltRst_n       : std_logic;                          -- pCpuRst_n returns here
-    -- signal  pSltIorq_n      : std_logic;
-    -- signal  pSltRd_n        : std_logic;
-    -- signal  pSltWr_n        : std_logic;
+    signal  pSltRst_n       : std_logic;                          -- pCpuRst_n returns here
+    signal  pSltIorq_n      : std_logic;
+    signal  pSltRd_n        : std_logic;
+    signal  pSltWr_n        : std_logic;
     signal  pSltAdr         : std_logic_vector( 15 downto 0 );
-    signal  pSltDat         : std_logic_vector( 7 downto 0);
 
-    -- signal  pSltRfsh_n      : std_logic;
-    -- signal  pSltWait_n      : std_logic;
-    -- signal  pSltInt_n       : std_logic;
-    -- signal  pSltMerq_n      : std_logic;
-
-
+    signal  pSltRfsh_n      : std_logic;
+    signal  pSltWait_n      : std_logic;
+    signal  pSltInt_n       : std_logic;
+    signal  pSltMerq_n      : std_logic;
 
     component tr_pcm                                                            -- 2019/11/29 t.hara added
         port(
@@ -1021,87 +999,27 @@ begin
 
     pSltInt_n   <=  pVdpInt_n;
 
-    pSltSltsl_n <=  '1' when( Scc1Type /= "00" )else
-                    '0' when( pSltMerq_n = '0' and CpuRfsh_n = '1' and PriSltNum = "01" )else
-                    '1';
+    -- ZMX Slot bus output connections (Only active on Page 1 & 2: 0x4000-0xBFFF)
+    pZmxSltCs       <= (w_prislt_dec(1) and (w_page_dec(1) or w_page_dec(2))) when (pZmxSlotSel = '0') else
+                       (w_prislt_dec(2) and (w_page_dec(1) or w_page_dec(2)));
+    pZmxSltMerq_n   <= pSltMerq_n;
+    pZmxSltRfsh_n   <= pSltRfsh_n;
+    pZmxSltIorq_n   <= pSltIorq_n;
+    pZmxSltRd_n     <= pSltRd_n;
+    pZmxSltWr_n     <= pSltWr_n;
+    pZmxSltM1_n     <= CpuM1_n;
+    pZmxSltBusDir   <= BusDir;
+    pZmxSltAdr      <= adr;
+    pZmxSltWDat     <= dbo;
 
-    pSltSlts2_n <=  '1' when( Slot2Mode /= "00" )else
-                    '0' when( pSltMerq_n = '0' and CpuRfsh_n = '1' and PriSltNum = "10" )else
-                    '1';    
-
-    cpu_di      <=  dbi when( pSltIorq_n = '0' and BusDir    = '1'  )else
+    -- I/O read data is not limited to page 1/2: port addresses sit in page 0.
+    cpu_di      <=  pZmxSltRDat when( pZmxSltRDatEn = '1' and ((w_page_dec(1) = '1') or (w_page_dec(2) = '1') or (pZmxIoRDat = '1')) )else
+                    dbi when( pSltIorq_n = '0' and BusDir    = '1'  )else
                     dbi when( pSltMerq_n = '0' and PriSltNum = "00" )else
                     dbi when( pSltMerq_n = '0' and PriSltNum = "11" )else
                     dbi when( pSltMerq_n = '0' and PriSltNum = "01" and Scc1Type /= "00" )else
                     dbi when( pSltMerq_n = '0' and PriSltNum = "10" and Slot2Mode  /= "00" )else
                     (others => '1');
-
-    ----------------------------------------------------------------
-    -- pSltMux multiplexing state machine
-    ----------------------------------------------------------------
-    process( clk21m )
-    begin
-        if( clk21m'event and clk21m = '1' )then
-            if( reset = '1' )then
-                mux_state       <= "00";
-                mux_prev_slts1  <= '1';
-                mux_prev_slts2  <= '1';
-                mux_prev_iorq   <= '1';
-                mux_adr_latch   <= (others => '0');
-                mux_dat_latch   <= (others => '0');
-            else
-                -- Store previous values for falling edge detection
-                mux_prev_slts1  <= pSltSltsl_n;
-                mux_prev_slts2  <= pSltSlts2_n;
-                mux_prev_iorq   <= pSltIorq_n;
-                
-                -- Detect falling edge on any of the control signals
-                if( (mux_prev_slts1 = '0' and pSltSltsl_n = '1') or
-                    (mux_prev_slts2 = '0' and pSltSlts2_n = '1') or
-                    (mux_prev_iorq  = '0' and pSltIorq_n  = '1') ) then
-                    -- Start multiplexing sequence
-                    mux_state <= "01";
-                    mux_adr_latch <= pSltAdr;
-                    mux_dat_latch <= pSltDat;
-                else
-                    case mux_state is
-                        when "01" =>
-                            -- First clock: transmit pSltAdr[7:0]
-                            mux_state <= "10";
-                        when "10" =>
-                            -- Second clock: transmit pSltAdr[15:8]
-                            mux_state <= "11";
-                        when "11" =>
-                            -- Third clock: transmit/receive pSltDat
-                            -- Hold in "11" state while wait is active
-                            if pSltWait_n = '0' then
-                                mux_state <= "11";
-                            else
-                                mux_state <= "00";
-                            end if;
-                        when others =>
-                            -- Idle state
-                            mux_state <= "00";
-                    end case;
-                end if;
-            end if;
-        end if;
-    end process;
-
-    -- pSltMode assignment based on state
-    pSltMode <= "00" when mux_state = "01" else   -- Transmit pSltAdr[7:0]
-                "01" when mux_state = "10" else   -- Transmit pSltAdr[15:8]
-                "10" when mux_state = "11" else   -- Transmit/receive pSltDat
-                "00";                             -- Idle
-
-    -- pSltMux assignment based on state
-    pSltMux <= mux_adr_latch( 7 downto 0 ) when mux_state = "01" else   -- pSltAdr[7:0]
-               mux_adr_latch(15 downto 8 ) when mux_state = "10" else   -- pSltAdr[15:8]
-               mux_dat_latch               when mux_state = "11" and pSltRd_n = '1' else   -- pSltDat
-               (others => 'Z');                                                 -- High impedance when idle
-
-    -- pSltDat assignment: transmit pSltMux when pSltRd_n is low
-    pSltDat <= pSltMux when pSltRd_n = '0' else (others => 'Z');
 
     ----------------------------------------------------------------
     -- Z80 CPU wait control
@@ -1143,6 +1061,8 @@ begin
                 end if;
 
                 if( CpuM1_n = '0' and iCpuM1_n = '1' )then
+                    pSltWait_n <= '0';
+                elsif( pZmxWait_n = '0' )then
                     pSltWait_n <= '0';
                 elsif( count /= "0000" )then
                     pSltWait_n <= '0';
@@ -1933,7 +1853,7 @@ begin
 			CLK         => clk21m,
 			CEN_p       => trueCen,
 			CEN_n       => trueCen_n,
-			WAIT_n      => pSltWait_n,
+			WAIT_n      => pSltWait_n and pZmxWait_n,
 			INT_n       => pSltInt_n,
 			NMI_n       => '1',
 			BUSRQ_n     => '1',

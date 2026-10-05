@@ -20,14 +20,18 @@ module zmx_bridge
 	// MSX Slot bus interface
 	input             slt_cs,          // Slot selected (Active High)
 	input             slt_merq_n,      // Memory Request (Active Low)
+	input             slt_rfsh_n,      // Refresh (Active Low). High during a real memory cycle
 	input             slt_iorq_n,      // IO Request (Active Low)
 	input             slt_rd_n,        // Read (Active Low)
 	input             slt_wr_n,        // Write (Active Low)
+	input             slt_m1_n,        // M1 (Active Low). Low during interrupt acknowledge
+	input             slt_busdir,      // 1 = internal MSX I/O device owns this port
 	input      [15:0] slt_addr,        // 16-bit address
 	input       [7:0] slt_wdata,       // 8-bit write data
 	output reg  [7:0] slt_rdata,       // 8-bit read data
 	output reg        slt_rdata_en,    // 1 = read data valid
-	output reg        cpu_wait_n       // CPU Wait signal (Active Low)
+	output reg        slt_rdata_io,    // 1 = read data is an I/O response (not slot memory)
+	output            cpu_wait_n       // CPU Wait signal (Active Low)
 );
 
 // SPI commands (matching Main_MiSTer support/msx)
@@ -73,6 +77,22 @@ state_t state = S_IDLE;
 reg [7:0] spi_cmd  = 8'h00;
 reg [3:0] byte_cnt = 0;
 reg [23:0] timeout_cnt = 0;
+reg [2:0]  hold_cnt = 0;
+
+// T80pa samples WAIT_n on the T2 falling phase, which is the same edge that
+// drops WR_n. Waiting only after RD/WR is already low misses that sample
+// (writes always, and reads too when the CPU is at 10.74 MHz). A real slot
+// memory cycle is MREQ with RFSH high; assert WAIT for that whole cycle.
+// External I/O (not an internal device, not interrupt acknowledge) is the
+// same kind of cycle and is reported as RD_IO / WR_IO.
+wire slot_mem = enable && !reset && slt_cs && !slt_merq_n && (!slt_rd_n || !slt_wr_n);
+wire slot_io  = enable && !reset && slt_m1_n && !slt_iorq_n && slt_merq_n && !slt_busdir && (!slt_rd_n || !slt_wr_n);
+wire is_read  = (req_cmd == RD_SLTSL1) || (req_cmd == RD_SLTSL2) || (req_cmd == RD_IO);
+
+assign cpu_wait_n = ~(
+	(state == S_WAIT_HPS) ||
+	(state == S_IDLE && (slot_mem || slot_io))
+);
 
 always @(posedge clk_sys or posedge reset) begin
 	if (reset) begin
@@ -83,8 +103,9 @@ always @(posedge clk_sys or posedge reset) begin
 		req_wdata    <= 8'h00;
 		slt_rdata    <= 8'hFF;
 		slt_rdata_en <= 0;
-		cpu_wait_n   <= 1;
+		slt_rdata_io <= 0;
 		timeout_cnt  <= 0;
+		hold_cnt     <= 0;
 
 		ext_active   <= 0;
 		ext_dout     <= 16'h0000;
@@ -94,8 +115,9 @@ always @(posedge clk_sys or posedge reset) begin
 		state        <= S_IDLE;
 		req_pending  <= 0;
 		slt_rdata_en <= 0;
-		cpu_wait_n   <= 1;
+		slt_rdata_io <= 0;
 		timeout_cnt  <= 0;
+		hold_cnt     <= 0;
 
 		ext_active   <= 0;
 		ext_dout     <= 16'h0000;
@@ -113,8 +135,8 @@ always @(posedge clk_sys or posedge reset) begin
 				case (io_din[7:0])
 					CMD_ZMX_POLL: begin
 						ext_active <= 1;
-						// First read word returns [15:8] = req_cmd, [7:0] = {7'b0, req_pending}
-						ext_dout   <= {req_cmd, 7'b0, req_pending};
+						// First read word returns [15:8] = 0xA5 (magic signature), [7:0] = {req_cmd[6:0], req_pending}
+						ext_dout   <= {8'hA5, req_cmd[6:0], req_pending};
 					end
 					CMD_ZMX_ADDR: begin
 						ext_active <= 1;
@@ -130,17 +152,24 @@ always @(posedge clk_sys or posedge reset) begin
 				endcase
 			end else if (byte_cnt == 1) begin
 				if (spi_cmd == CMD_ZMX_POLL) begin
-					ext_active <= 0;
+					// Keep ext_active asserted with status data while HPS reads status word
+					ext_active <= 1;
+					ext_dout   <= {8'hA5, req_cmd[6:0], req_pending};
 				end else if (spi_cmd == CMD_ZMX_ADDR) begin
-					// Second word returns write data: [7:0] = req_wdata
-					ext_dout <= {8'h00, req_wdata};
+					// Word 1: HPS reads req_addr
+					ext_active <= 1;
+					ext_dout   <= req_addr;
 				end else if (spi_cmd == CMD_ZMX_RESP) begin
 					// HPS sends back read data: io_din[7:0]
 					slt_rdata   <= io_din[7:0];
 					req_pending <= 0; // Handshake: clear pending -> releases CPU WAIT
 				end
 			end else if (byte_cnt == 2) begin
-				ext_active <= 0;
+				if (spi_cmd == CMD_ZMX_ADDR) begin
+					// Word 2: HPS reads req_wdata
+					ext_active <= 1;
+					ext_dout   <= {8'h00, req_wdata};
+				end
 			end
 		end
 
@@ -148,42 +177,57 @@ always @(posedge clk_sys or posedge reset) begin
 		case (state)
 			S_IDLE: begin
 				slt_rdata_en <= 0;
-				// Slot Memory Read or Write cycle detection
-				if (slt_cs && !slt_merq_n) begin
+				slt_rdata_io <= 0;
+				hold_cnt     <= 0;
+				// WAIT is already held combinationally on slot_mem / slot_io.
+				// Classify the cycle only once RD or WR is actually low:
+				// memory writes drop WR_n on the T2 wait-sample edge, so they
+				// show up one clock after MREQ while the CPU is stalled.
+				if (slot_mem && !slt_rd_n) begin
 					timeout_cnt <= 0;
-					if (!slt_rd_n) begin
-						// Memory Read
-						req_pending <= 1;
-						req_cmd     <= slot_sel ? RD_SLTSL2 : RD_SLTSL1;
-						req_addr    <= slt_addr;
-						cpu_wait_n  <= 0; // Hold CPU
-						state       <= S_WAIT_HPS;
-					end else if (!slt_wr_n) begin
-						// Memory Write
-						req_pending <= 1;
-						req_cmd     <= slot_sel ? WR_SLTSL2 : WR_SLTSL1;
-						req_addr    <= slt_addr;
-						req_wdata   <= slt_wdata;
-						cpu_wait_n  <= 0; // Hold CPU
-						state       <= S_WAIT_HPS;
-					end
+					req_pending <= 1;
+					req_cmd     <= slot_sel ? RD_SLTSL2 : RD_SLTSL1;
+					req_addr    <= slt_addr;
+					state       <= S_WAIT_HPS;
+				end else if (slot_mem && !slt_wr_n) begin
+					timeout_cnt <= 0;
+					req_pending <= 1;
+					req_cmd     <= slot_sel ? WR_SLTSL2 : WR_SLTSL1;
+					req_addr    <= slt_addr;
+					req_wdata   <= slt_wdata;
+					state       <= S_WAIT_HPS;
+				end else if (slot_io && !slt_rd_n) begin
+					timeout_cnt <= 0;
+					req_pending <= 1;
+					req_cmd     <= RD_IO;
+					req_addr    <= slt_addr;
+					state       <= S_WAIT_HPS;
+				end else if (slot_io && !slt_wr_n) begin
+					timeout_cnt <= 0;
+					req_pending <= 1;
+					req_cmd     <= WR_IO;
+					req_addr    <= slt_addr;
+					req_wdata   <= slt_wdata;
+					state       <= S_WAIT_HPS;
 				end
 			end
 
 			S_WAIT_HPS: begin
 				// Handshake complete when HPS responds with CMD_ZMX_RESP (which clears req_pending)
 				if (!req_pending) begin
-					slt_rdata_en <= (req_cmd == RD_SLTSL1 || req_cmd == RD_SLTSL2 || req_cmd == RD_IO);
-					cpu_wait_n   <= 1; // Release CPU WAIT
+					slt_rdata_en <= is_read;
+					slt_rdata_io <= (req_cmd == RD_IO);
+					hold_cnt     <= 3'd3;
 					state        <= S_DONE;
 				end else begin
 					timeout_cnt <= timeout_cnt + 1'd1;
-					// 21.48MHz clock: 2000 cycles = ~93us timeout (ultra-fast safety timeout)
-					if (timeout_cnt >= 24'd2000) begin
+					// 21.48MHz clock: 100000 cycles = ~4.65ms timeout (gives HPS main loop sufficient time)
+					if (timeout_cnt >= 24'd100000) begin
 						// Safety Timeout: Release CPU and return 0xFF to prevent hang/black screen
 						slt_rdata    <= 8'hFF;
-						slt_rdata_en <= 1;
-						cpu_wait_n   <= 1; // Release CPU WAIT
+						slt_rdata_en <= is_read;
+						slt_rdata_io <= (req_cmd == RD_IO);
+						hold_cnt     <= 3'd3;
 						req_pending  <= 0;
 						state        <= S_DONE;
 					end
@@ -191,9 +235,16 @@ always @(posedge clk_sys or posedge reset) begin
 			end
 
 			S_DONE: begin
-				// Wait for bus cycle to complete before returning to IDLE
-				if (slt_merq_n && slt_iorq_n) begin
+				// T80pa drops M1 RD_n one phase before it samples DI.
+				// Keep the byte driven for a few 21.48 MHz clocks after RD/WR rise
+				// so that sample still sees it, then return to IDLE.
+				if (!slt_rd_n || !slt_wr_n) begin
+					hold_cnt <= 3'd3;
+				end else if (hold_cnt != 0) begin
+					hold_cnt <= hold_cnt - 3'd1;
+				end else begin
 					slt_rdata_en <= 0;
+					slt_rdata_io <= 0;
 					state        <= S_IDLE;
 				end
 			end
