@@ -208,6 +208,7 @@ localparam CONF_STR = {
 	"-;",
 	"O4,Slot1,Empty,MegaSCC+ 1MB;",
 	"O56,Slot2,Empty,MegaSCC+ 2MB,MegaRAM ASCII-8K 1MB,MegaRAM ASCII-16K 2MB;",
+	"OIJ,ZMX Bridge,Disabled,Slot 1,Slot 2;",
 	"-;",
 	"O7,Internal Mapper,2048KB RAM,4096KB RAM;",
 	"-;",
@@ -274,6 +275,7 @@ wire [15:0] joy_0 = status[13] ? joy_B : joy_A;
 wire [15:0] joy_1 = status[13] ? joy_A : joy_B;
 
 wire [21:0] gamma_bus;
+wire [35:0] ext_bus;
 
 hps_io #(.CONF_STR(CONF_STR)) hps_io
 (
@@ -307,6 +309,8 @@ hps_io #(.CONF_STR(CONF_STR)) hps_io
 	.img_mounted(img_mounted),
 	.img_readonly(img_readonly),
 	.img_size(img_size),
+
+	.EXT_BUS(ext_bus),
 
 	.ioctl_wait(0)
 );
@@ -458,7 +462,51 @@ emsx_top emsx
 	.pAudioPSG(audioPSG),     //10bits unsigned
 	.pAudioOPLL(audioOPLL),   //10bits unsigned
 	.pAudioPCM(audioPCM),     //16bits signed
-	.pAudioTRPCM(audioTRPCM)  //8bits  signed
+	.pAudioTRPCM(audioTRPCM), //8bits  signed
+
+	// ZMX Slot Extension
+	.pZmxSlotSel(status[19]),
+	.pZmxWait_n(zmx_wait_n),
+	.pZmxSltCs(zmx_slt_cs),
+	.pZmxSltMerq_n(zmx_slt_merq_n),
+	.pZmxSltIorq_n(zmx_slt_iorq_n),
+	.pZmxSltRd_n(zmx_slt_rd_n),
+	.pZmxSltWr_n(zmx_slt_wr_n),
+	.pZmxSltAdr(zmx_slt_addr),
+	.pZmxSltWDat(zmx_slt_wdata),
+	.pZmxSltRDat(zmx_slt_rdata),
+	.pZmxSltRDatEn(zmx_slt_rdata_en)
+);
+
+// ZMX Bridge
+wire        zmx_wait_n;
+wire        zmx_slt_cs;
+wire        zmx_slt_merq_n;
+wire        zmx_slt_iorq_n;
+wire        zmx_slt_rd_n;
+wire        zmx_slt_wr_n;
+wire [15:0] zmx_slt_addr;
+wire  [7:0] zmx_slt_wdata;
+wire  [7:0] zmx_slt_rdata;
+wire        zmx_slt_rdata_en;
+
+zmx_bridge zmx_bridge
+(
+	.clk_sys(clk_sys),
+	.reset(reset),
+	.EXT_BUS(ext_bus),
+	.enable(|status[19:18]),
+	.slot_sel(status[19]),
+	.slt_cs(zmx_slt_cs),
+	.slt_merq_n(zmx_slt_merq_n),
+	.slt_iorq_n(zmx_slt_iorq_n),
+	.slt_rd_n(zmx_slt_rd_n),
+	.slt_wr_n(zmx_slt_wr_n),
+	.slt_addr(zmx_slt_addr),
+	.slt_wdata(zmx_slt_wdata),
+	.slt_rdata(zmx_slt_rdata),
+	.slt_rdata_en(zmx_slt_rdata_en),
+	.cpu_wait_n(zmx_wait_n)
 );
 
 altddio_out
