@@ -103,7 +103,20 @@ entity emsx_top is
         pAudioPSG       : out   std_logic_vector(  9 downto 0);
         pAudioOPLL      : out   std_logic_vector( 13 downto 0);
         pAudioPCM       : out   std_logic_vector( 15 downto 0);
-        pAudioTRPCM     : out   std_logic_vector(  7 downto 0)
+        pAudioTRPCM     : out   std_logic_vector(  7 downto 0);
+
+        -- ZMX Slot Extension ports
+        pZmxSlotSel     : in    std_logic := '1'; -- '0': Slot 1, '1': Slot 2
+        pZmxWait_n      : in    std_logic := '1';
+        pZmxSltCs       : out   std_logic;
+        pZmxSltMerq_n   : out   std_logic;
+        pZmxSltIorq_n   : out   std_logic;
+        pZmxSltRd_n     : out   std_logic;
+        pZmxSltWr_n     : out   std_logic;
+        pZmxSltAdr      : out   std_logic_vector( 15 downto 0 );
+        pZmxSltWDat     : out   std_logic_vector(  7 downto 0 );
+        pZmxSltRDat     : in    std_logic_vector(  7 downto 0 ) := (others => '1');
+        pZmxSltRDatEn   : in    std_logic := '0'
     );
 end emsx_top;
 
@@ -982,7 +995,18 @@ begin
 
     pSltInt_n   <=  pVdpInt_n;
 
-    cpu_di      <=  dbi when( pSltIorq_n = '0' and BusDir    = '1'  )else
+    -- ZMX Slot bus output connections (Only active on Page 1 & 2: 0x4000-0xBFFF)
+    pZmxSltCs       <= (w_prislt_dec(1) and (w_page_dec(1) or w_page_dec(2))) when (pZmxSlotSel = '0') else
+                       (w_prislt_dec(2) and (w_page_dec(1) or w_page_dec(2)));
+    pZmxSltMerq_n   <= pSltMerq_n;
+    pZmxSltIorq_n   <= pSltIorq_n;
+    pZmxSltRd_n     <= pSltRd_n;
+    pZmxSltWr_n     <= pSltWr_n;
+    pZmxSltAdr      <= adr;
+    pZmxSltWDat     <= dbo;
+
+    cpu_di      <=  pZmxSltRDat when( pZmxSltRDatEn = '1' and (w_page_dec(1) = '1' or w_page_dec(2) = '1') )else
+                    dbi when( pSltIorq_n = '0' and BusDir    = '1'  )else
                     dbi when( pSltMerq_n = '0' and PriSltNum = "00" )else
                     dbi when( pSltMerq_n = '0' and PriSltNum = "11" )else
                     dbi when( pSltMerq_n = '0' and PriSltNum = "01" and Scc1Type /= "00" )else
@@ -1029,6 +1053,8 @@ begin
                 end if;
 
                 if( CpuM1_n = '0' and iCpuM1_n = '1' )then
+                    pSltWait_n <= '0';
+                elsif( pZmxWait_n = '0' )then
                     pSltWait_n <= '0';
                 elsif( count /= "0000" )then
                     pSltWait_n <= '0';
