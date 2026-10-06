@@ -152,10 +152,9 @@ always @(posedge clk_sys or posedge reset) begin
 				endcase
 			end else if (byte_cnt == 1) begin
 				if (spi_cmd == CMD_ZMX_POLL) begin
-					// Word 1: HPS is reading status word.
-					// Pre-load next word with req_addr for high-speed single-transaction mode!
+					// Word 1: HPS is reading status word. Keep status data valid on bus!
 					ext_active <= 1;
-					ext_dout   <= req_addr;
+					ext_dout   <= {8'hA5, req_cmd[6:0], req_pending};
 				end else if (spi_cmd == CMD_ZMX_ADDR) begin
 					// Legacy mode - Word 1: HPS reads req_addr
 					ext_active <= 1;
@@ -167,15 +166,9 @@ always @(posedge clk_sys or posedge reset) begin
 				end
 			end else if (byte_cnt == 2) begin
 				if (spi_cmd == CMD_ZMX_POLL) begin
-					// Word 2: HPS just read req_addr.
-					if (is_read) begin
-						// For reads, HPS will send rdata on word 3; release MISO
-						ext_active <= 0;
-					end else begin
-						// For writes, pre-load wdata for HPS to read on word 3
-						ext_active <= 1;
-						ext_dout   <= {8'h00, req_wdata};
-					end
+					// Word 2: HPS is reading req_addr! Keep req_addr valid on bus!
+					ext_active <= 1;
+					ext_dout   <= req_addr;
 				end else if (spi_cmd == CMD_ZMX_ADDR) begin
 					// Legacy mode - Word 2: HPS reads req_wdata
 					ext_active <= 1;
@@ -184,18 +177,19 @@ always @(posedge clk_sys or posedge reset) begin
 			end else if (byte_cnt == 3) begin
 				if (spi_cmd == CMD_ZMX_POLL) begin
 					if (is_read) begin
-						// Word 3: HPS just sent rdata in io_din[7:0]!
+						// Word 3: Single-session read complete! HPS sent rdata in io_din[7:0]
 						slt_rdata   <= io_din[7:0];
-						req_pending <= 0; // Handshake complete -> releases CPU WAIT!
+						req_pending <= 0; // Releases CPU WAIT immediately!
 						ext_active  <= 0;
 					end else begin
-						// For writes, HPS just read wdata; release MISO for ack word
-						ext_active  <= 0;
+						// Word 3: HPS is reading req_wdata! Keep wdata valid on bus!
+						ext_active <= 1;
+						ext_dout   <= {8'h00, req_wdata};
 					end
 				end
 			end else if (byte_cnt == 4) begin
 				if (spi_cmd == CMD_ZMX_POLL && !is_read) begin
-					// Word 4: HPS ack for write completion
+					// Word 4: Single-session write complete! HPS ack received
 					req_pending <= 0; // Releases CPU WAIT!
 					ext_active  <= 0;
 				end
